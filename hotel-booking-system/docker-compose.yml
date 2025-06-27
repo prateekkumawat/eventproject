@@ -1,0 +1,83 @@
+
+version: '3.9'
+
+services:
+  gateway:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - reservation
+      - inventory
+      - pricing
+      - notification
+      - payment
+
+  reservation:
+    build: ./services/reservation
+    ports:
+      - "5001:8080"
+    environment:
+      - DB_URI=mongodb://reservation-db:27017
+    depends_on:
+      - reservation-db
+
+  reservation-db:
+    image: mongo
+    volumes:
+      - reservation-data:/data/db
+
+  inventory:
+    build: ./services/inventory
+    ports:
+      - "5002:8080"
+    environment:
+      - DB_URI=mongodb://inventory-db:27017
+    depends_on:
+      - inventory-db
+
+  inventory-db:
+    image: mongo
+    volumes:
+      - inventory-data:/data/db
+
+  pricing:
+    build: ./services/pricing
+    ports:
+      - "5003:8080"
+    environment:
+      - DB_URI=mongodb://pricing-db:27017
+    depends_on:
+      - pricing-db
+
+  pricing-db:
+    image: mongo
+    volumes:
+      - pricing-data:/data/db
+
+  notification:
+    build: ./services/notification
+    ports:
+      - "5004:8080"
+
+  payment:
+    build: ./services/payment
+    ports:
+      - "5005:8080"
+
+  admin-ui:
+    build: ./frontend/admin
+    ports:
+      - "3001:3000"
+
+  customer-ui:
+    build: ./frontend/customer
+    ports:
+      - "3000:3000"
+
+volumes:
+  reservation-data:
+  inventory-data:
+  pricing-data:
